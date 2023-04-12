@@ -56,6 +56,16 @@ app.post('/tracking',(req,res)=>{
     })
 })
 
+app.post('/mornitor',(req,res)=>{
+    const query="select Time,HeartRate,Oxi,GripStrength from mornitor where `ID_patient`=?"
+    db.query(query,[req.body.ID],(err,data)=>{
+        if(err){
+            return res.json("Error")
+        }
+        return res.json(data)
+    })
+})
+
 app.post('/estimate',(req,res)=>{
     const query="select * from estimate where `ID_patient` = ?"
     db.query(query,[req.body.ID],(err,data)=>{
