@@ -7,8 +7,6 @@ const app=express()
 app.use(cors())
 app.use(express.json())
 
-let i = 0
-
 const db=mysql.createConnection({
     host:"103.130.211.150",
     port:"10039",
@@ -23,13 +21,12 @@ app.post('/create',(req,res)=>{
         req.body.Username,
         req.body.Email,
         req.body.Pass,
-        i,
+        req.body.ID,
     ]
     db.query(query,[values],(err,data)=>{
         if(err){
             return res.json("Error")
         }
-        i=i+1
         return res.json(data)
     })
 })
@@ -97,6 +94,16 @@ app.post('/addtracking',(req,res)=>{
         req.body.ID_patient,
     ]
     db.query(query,[values],(err,data)=>{
+        if(err){
+            return res.json(err)
+        }
+        return res.json(data)
+    })
+})
+
+app.post('/count',(req,res)=>{
+    const query="select count(*) as Count from mydb.logins"
+    db.query(query,(err,data)=>{
         if(err){
             return res.json(err)
         }
