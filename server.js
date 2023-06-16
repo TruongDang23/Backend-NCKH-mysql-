@@ -1,11 +1,12 @@
 const express=require('express')
 const mysql=require('mysql')
 const cors=require('cors')
-
-
+const moment=require('moment')
 const app=express()
+
 app.use(cors())
 app.use(express.json())
+
 
 const db=mysql.createConnection({
     host:"103.130.211.150",
@@ -58,7 +59,8 @@ app.post('/tracking',(req,res)=>{
 })
 
 app.post('/mornitor',(req,res)=>{
-    const query="select Time,HeartRate,Oxi,GripStrength from mornitor where `ID_patient`=?"
+    const realDate= moment().format("YYYY-MM-DD")
+    const query="select Time,HeartRate,Oxi,GripStrength from mornitor where `ID_patient`=? and DATE(`Time`)='"+realDate+"'"
     db.query(query,[req.body.ID],(err,data)=>{
         if(err){
             return res.json("Error")
