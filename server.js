@@ -103,6 +103,16 @@ app.post('/addtracking',(req,res)=>{
     })
 })
 
+app.post('/deletetracking',(req,res)=>{
+    const query="delete from list_tracking where `User` = ? and `ID_patient` = ?"
+    db.query(query,[req.body.ID,req.body.ID_patient],(err,data)=>{
+        if(err){
+            return res.json(err)
+        }
+        return res.json(data)
+    })
+})
+
 app.post('/count',(req,res)=>{
     const query="select count(*) as Count from mydb.logins"
     db.query(query,(err,data)=>{
