@@ -9,8 +9,8 @@ i = 0
 SaveMale = 30
 saveFeMale = 24.5
 # Thiết lập địa chỉ, cổng và chủ đề của kết nối MQTT Broker
-broker = "118.69.218.59"
-port = 1893
+broker = "103.130.211.150"
+port = 10040
 topics = ["/patient/1111/mornitor/oxi", "/patient/1111/mornitor/heartRate",\
            "/patient/1111/mornitor/grip","/patient/1111/estimate/avg" ]
 client_id = f"python-mqtt-{random.randint(0, 1000)}"
