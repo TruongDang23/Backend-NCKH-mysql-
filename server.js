@@ -80,8 +80,8 @@ app.post('/estimate',(req,res)=>{
 })
 
 app.post('/find',(req,res)=>{
-    const query="select * from information where `ID_patient`=?"
-    db.query(query,[req.body.ID],(err,data)=>{
+    const query="select * from information where `Name`=?"
+    db.query(query,[req.body.Name],(err,data)=>{
         if(err){
             return res.json("Error")
         }
