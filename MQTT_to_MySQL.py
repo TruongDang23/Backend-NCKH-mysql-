@@ -4,15 +4,14 @@ import mysql.connector
 from datetime import datetime 
 import time
 
-i = 0
 #Muc an toan
-SaveMale = 30
-saveFeMale = 24.5
+SaveMale = 30.2
+saveFeMale = 24.3
 # Thiết lập địa chỉ, cổng và chủ đề của kết nối MQTT Broker
 broker = "103.130.211.150"
 port = 10040
-topics = ["/patient/1111/mornitor/oxi", "/patient/1111/mornitor/heartRate",\
-           "/patient/1111/mornitor/grip","/patient/1111/estimate/avg" ]
+topics = ["/patient/+/mornitor/oxi", "/patient/+/mornitor/heartRate",\
+           "/patient/+/mornitor/grip","/patient/+/estimate/avg" ]
 client_id = f"python-mqtt-{random.randint(0, 1000)}"
 username = "phunghx"
 password = "nckh"
@@ -47,10 +46,11 @@ class MQTT:
         self.password = password
         self.topics = topics
         self.client = mqtt.Client(client_id)
-        self.avg = 0
-        self.oxi = 0
-        self.heart = 0
-        self.grip = 0
+        self.listuser = []
+        self.avg = {}
+        self.oxi = {}
+        self.heart = {}
+        self.grip = {}
     
     def Connect_MQTT(self):
         self.client.username_pw_set(username, password)
@@ -60,42 +60,56 @@ class MQTT:
         self.client.subscribe([(topic, 0) for topic in self.topics])
         
     def on_message(self,client, userdata, msg):
-        if f"{msg.topic}" == "/patient/1111/estimate/avg":
-            self.avg = msg.payload
-            self.Write_Estimate()
-        else:
-            if f"{msg.topic}" == "/patient/1111/mornitor/oxi":
-                self.oxi = msg.payload
-            elif f"{msg.topic}" == "/patient/1111/mornitor/heartRate":
-                self.heart = msg.payload
-            elif f"{msg.topic}" == "/patient/1111/mornitor/grip":
-                self.grip = msg.payload 
-            
+        userID = msg.topic[9:25]
+        if userID not in self.listuser:
+            self.listuser.append(userID)
 
-    def Write_Estimate(self):
-        heso = HeSo_TiLeBenh(self.avg, True)
+        if "avg" in f"{msg.topic}":      
+            self.avg[userID] = msg.payload
+            self.Write_Estimate(userID)
+        else:
+            if "oxi" in f"{msg.topic}":  
+                self.oxi[userID] = msg.payload
+            elif "heartRate" in f"{msg.topic}":  
+                self.heart[userID] = msg.payload
+            elif "grip" in f"{msg.topic}":
+                self.grip[userID] = msg.payload        
+
+    def Write_Estimate(self, userID):
+        heso = HeSo_TiLeBenh(self.avg[userID], True)
         sql = f"INSERT INTO estimate (id_patient, time, AVG, DotQuy, NhoiMau, TimMach) \
-                VALUES ('{1111}', '{datetime.now()}', '{float(self.avg)}',\
+                VALUES ('{userID}', '{datetime.now()}', '{float(self.avg[userID])}',\
                       '{float(heso*9)}', '{float(heso*7)}', '{float(heso*17)}')"
+        print(sql)
         TruyVanSQL(sql)
 
     def Write_Mornitor(self):
-        sql = f"INSERT INTO mornitor (id_patient, time, heartRate, Oxi, GripStrength) \
-                VALUES ('{1111}', '{datetime.now()}', \
-                    '{float(self.heart)}', '{float(self.oxi)}', '{float(self.grip)}')"
-        TruyVanSQL(sql)
+        for userID in self.listuser:
+            if userID in self.heart:
+                heart = self.heart[userID]
+            else: heart = 0
+            if userID in self.oxi:
+                oxi = self.oxi[userID]
+            else: oxi = 0
+            if userID in self.grip:
+                grip = self.grip[userID]
+            else: grip = 0
+            sql = f"INSERT INTO mornitor (ID_patient, time, heartRate, Oxi, GripStrength) \
+                    VALUES ('{userID}', '{datetime.now()}', \
+                        '{float(heart)}', '{float(oxi)}', '{float(grip)}')"
+            TruyVanSQL(sql)
 
     def Run(self):
         self.client.loop_start()
         self.client.on_connect = self.on_connect
         time_cur = time.perf_counter()
-        while time_cur + 10 > time.perf_counter():
+        while time_cur + 60 > time.perf_counter():
             self.client.on_message = self.on_message
 
         time_cur = time.perf_counter()
         self.Write_Mornitor()
         self.client.loop_stop()
-        
+        self.listuser = []
 
 client_mor = MQTT(broker,port,username,password,topics)
 client_mor.Connect_MQTT()
