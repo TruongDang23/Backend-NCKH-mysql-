@@ -103,7 +103,7 @@ class MQTT:
         self.client.loop_start()
         self.client.on_connect = self.on_connect
         time_cur = time.perf_counter()
-        while time_cur + 10 > time.perf_counter():
+        while time_cur + 30 > time.perf_counter():
             self.client.on_message = self.on_message
 
         time_cur = time.perf_counter()
